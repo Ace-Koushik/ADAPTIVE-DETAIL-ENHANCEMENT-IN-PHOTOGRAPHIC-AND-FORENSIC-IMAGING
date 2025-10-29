@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row">
+  <div class="col-lg-8 mx-auto">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="text-center mb-4">
+          <h3 class="card-title fw-bold">Adaptive Detail Enhancement</h3>
+          <p class="text-muted mb-0">Upload an image, choose an enhancement mode, and analyze quality metrics in real-time.</p>
+        </div>
+
+        <form id="uploadForm" action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Upload Image</label>
+            <div id="dropZone" class="drop-zone">
+              <input class="form-control" type="file" id="image" name="image" accept=".jpg,.jpeg,.png" required>
+              <div class="dz-text"><i class="bi bi-cloud-arrow-up"></i> Drag & Drop or Click to Upload</div>
+              <img id="previewImage" class="img-fluid mt-2 d-none" alt="preview">
+            </div>
+            <div class="form-text">Supported formats: JPG, JPEG, PNG (max 16MB).</div>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Enhancement Mode</label>
+              <select class="form-select" id="mode" name="mode">
+                <option value="median">Median Filter (Baseline)</option>
+                <option value="clahe" selected>CLAHE (Standard)</option>
+                <option value="bilateral">CLAHE + Bilateral Filter</option>
+                <option value="unsharp">CLAHE + Unsharp Masking</option>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">Use Case Preset</label>
+              <select class="form-select" id="use_case" name="use_case">
+                {% for p in presets %}
+                <option value="{{ p }}">{{ p|capitalize }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="accordion mt-3" id="paramsAccordion">
+            <div class="accordion-item">
+              <h2 class="accordion-header" id="headingParams">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseParams" aria-expanded="true" aria-controls="collapseParams">
+                  Advanced Parameters
+                </button>
+              </h2>
+              <div id="collapseParams" class="accordion-collapse collapse show" aria-labelledby="headingParams" data-bs-parent="#paramsAccordion">
+                <div class="accordion-body">
+                  <div class="row g-3">
+                    <div class="col-md-4">
+                      <label class="form-label">Clip Limit <i class="bi bi-question-circle-fill" title="Higher clip limit increases contrast but may amplify noise."></i></label>
+                      <input type="range" class="form-range" min="1.0" max="4.0" step="0.1" id="clip_limit" name="clip_limit" value="2.0">
+                      <div class="d-flex justify-content-between"><small>1.0</small><small id="clipLimitVal">2.0</small><small>4.0</small></div>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label">Block Size <i class="bi bi-question-circle-fill" title="Smaller tiles adapt more locally. Typical: 4-16."></i></label>
+                      <input type="range" class="form-range" min="4" max="16" step="1" id="block_size" name="block_size" value="8">
+                      <div class="d-flex justify-content-between"><small>4</small><small id="blockSizeVal">8</small><small>16</small></div>
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label">Kernel Size (Median) <i class="bi bi-question-circle-fill" title="Odd integer kernel size for the median filter."></i></label>
+                      <input type="range" class="form-range" min="3" max="11" step="2" id="kernel_size" name="kernel_size" value="5">
+                      <div class="d-flex justify-content-between"><small>3</small><small id="kernelSizeVal">5</small><small>11</small></div>
+                    </div>
+                  </div>
+
+                  <div class="row g-3 mt-1">
+                    <div class="col-md-4">
+                      <label class="form-label">Bilateral d</label>
+                      <input type="number" class="form-control" id="bilateral_d" name="bilateral_d" value="9" min="1" step="1">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label">Sigma Color</label>
+                      <input type="number" class="form-control" id="sigma_color" name="sigma_color" value="75" min="1" step="1">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label">Sigma Space</label>
+                      <input type="number" class="form-control" id="sigma_space" name="sigma_space" value="75" min="1" step="1">
+                    </div>
+                  </div>
+
+                  <div class="row g-3 mt-1">
+                    <div class="col-md-4">
+                      <label class="form-label">Unsharp Amount</label>
+                      <input type="number" class="form-control" id="unsharp_amount" name="unsharp_amount" value="1.5" step="0.1">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label">Unsharp Radius</label>
+                      <input type="number" class="form-control" id="unsharp_radius" name="unsharp_radius" value="1.0" step="0.1">
+                    </div>
+                    <div class="col-md-4">
+                      <label class="form-label">Unsharp Threshold</label>
+                      <input type="number" class="form-control" id="unsharp_threshold" name="unsharp_threshold" value="0" step="1" min="0">
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 d-flex gap-2">
+            <button class="btn btn-primary" type="submit">
+              <span class="spinner-border spinner-border-sm d-none" id="submitSpinner" role="status" aria-hidden="true"></span>
+              Process Image
+            </button>
+            <button type="reset" class="btn btn-outline-secondary">Reset</button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+    <div class="row mt-4 g-3">
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">Median Filter</h5>
+            <p class="card-text">Baseline noise reduction using a median filter. Effective against salt-and-pepper noise, but may blur fine details.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">CLAHE (Standard)</h5>
+            <p class="card-text">Contrast Limited Adaptive Histogram Equalization on luminance channel for improved local contrast without over-amplification.</p>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">Hybrid Methods</h5>
+            <p class="card-text mb-2"><strong>CLAHE + Bilateral:</strong> Edge-preserving smoothing to reduce noise.</p>
+            <p class="card-text"><strong>CLAHE + Unsharp:</strong> Enhance fine details and edges for clarity.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

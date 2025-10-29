@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual env
+venv/
+.env/
+.venv/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# App data
+static/uploads/*
+static/results/*
+static/reports/*
+
+# Keep directory structure
+!static/uploads/.gitkeep
+!static/results/.gitkeep
+!static/reports/.gitkeep

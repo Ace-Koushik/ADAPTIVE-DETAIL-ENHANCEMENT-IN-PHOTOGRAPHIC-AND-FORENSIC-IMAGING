@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h4 class="mb-0">Gallery</h4>
+  <div class="d-flex gap-2">
+    <select id="filterMode" class="form-select form-select-sm" style="width: 200px;">
+      <option value="all" selected>All Modes</option>
+      <option value="median">Median</option>
+      <option value="clahe">CLAHE</option>
+      <option value="bilateral">CLAHE + Bilateral</option>
+      <option value="unsharp">CLAHE + Unsharp</option>
+    </select>
+    <select id="sortBy" class="form-select form-select-sm" style="width: 160px;">
+      <option value="date" selected>Sort by Date</option>
+      <option value="name">Sort by Name</option>
+      <option value="psnr">Sort by PSNR</option>
+    </select>
+  </div>
+</div>
+
+<div class="row" id="galleryGrid">
+  {% for item in history %}
+  <div class="col-md-4 mb-3 gallery-item" data-mode="{{ item.mode }}" data-psnr="{{ item.metrics.psnr }}" data-name="{{ item.enhanced_filename }}" data-date="{{ item.timestamp }}">
+    <div class="card h-100 shadow-sm">
+      <img src="{{ url_for('static', filename=item.enhanced.split('static/')[1]) }}" class="card-img-top" alt="{{ item.enhanced_filename }}">
+      <div class="card-body">
+        <h6 class="card-title text-truncate">{{ item.enhanced_filename }}</h6>
+        <span class="badge bg-primary">{{ item.method_used }}</span>
+        <div class="small text-muted mt-2">PSNR: {{ '%.3f'|format(item.metrics.psnr) }} dB • SSIM: {{ '%.3f'|format(item.metrics.ssim) }}</div>
+        <div class="small text-muted">Date: {{ item.timestamp }}</div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

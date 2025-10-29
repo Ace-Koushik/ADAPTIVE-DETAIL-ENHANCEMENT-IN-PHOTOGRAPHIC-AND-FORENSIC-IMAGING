@@ -1,0 +1,88 @@
+:root {
+  --bg: #ffffff;
+  --fg: #212529;
+  --muted: #6c757d;
+  --card-bg: #ffffff;
+  --border: #e9ecef;
+  --primary: #0d6efd;
+  --psnr: #1976D2;
+  --mse: #EF5350;
+  --ssim: #43A047;
+}
+
+html[data-theme="dark"] {
+  --bg: #121212;
+  --fg: #e1e1e1;
+  --muted: #a0a0a0;
+  --card-bg: #1e1e1e;
+  --border: #2c2c2c;
+  --primary: #1976D2;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--fg);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.card {
+  background-color: var(--card-bg);
+  border-color: var(--border);
+}
+
+.drop-zone {
+  position: relative;
+  border: 2px dashed var(--border);
+  padding: 1rem;
+  text-align: center;
+  background: rgba(13, 110, 253, 0.02);
+  border-radius: 0.5rem;
+}
+
+.drop-zone input[type="file"] {
+  opacity: 0;
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+}
+
+.drop-zone .dz-text {
+  color: var(--muted);
+}
+
+.metric-card {
+  border-radius: 0.5rem;
+  padding: 0.75rem;
+  color: #fff;
+  text-align: center;
+}
+
+.metric-card .metric-title {
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.metric-card .metric-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.bg-psnr { background: linear-gradient(135deg, var(--psnr), #63a4ff); }
+.bg-mse { background: linear-gradient(135deg, var(--mse), #ff867c); }
+.bg-ssim { background: linear-gradient(135deg, var(--ssim), #7bc67b); }
+
+footer {
+  background-color: var(--card-bg);
+  border-color: var(--border);
+}
+
+/* Spinner alignment */
+#submitSpinner {
+  margin-right: 6px;
+}
+
+/* Chart container responsiveness */
+#metricsChart, #dashboardChart {
+  width: 100%;
+  min-height: 320px;
+}

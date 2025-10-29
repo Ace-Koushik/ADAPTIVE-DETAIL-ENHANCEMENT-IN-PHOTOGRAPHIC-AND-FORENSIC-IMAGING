@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-3">
+  <h4 class="mb-0">Comparative Performance Analysis</h4>
+  <button id="exportCSV" class="btn btn-outline-secondary btn-sm">
+    <i class="bi bi-download"></i> Export CSV
+  </button>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header fw-semibold">Average Metrics by Method</div>
+      <div class="card-body">
+        <table class="table table-striped table-hover small align-middle">
+          <thead>
+          <tr>
+            <th>Method</th>
+            <th>PSNR (dB)</th>
+            <th>MSE</th>
+            <th>SSIM</th>
+            <th>Best</th>
+          </tr>
+          </thead>
+          <tbody>
+          {% for method, vals in avg.items() %}
+            <tr>
+              <td>{{ method|capitalize }}</td>
+              <td>{{ '%.3f'|format(vals.psnr) }}</td>
+              <td>{{ '%.6f'|format(vals.mse) }}</td>
+              <td>{{ '%.4f'|format(vals.ssim) }}</td>
+              <td>
+                {% if best.psnr == method %}<span class="badge bg-success">PSNR</span>{% endif %}
+                {% if best.mse == method %} <span class="badge bg-danger">MSE</span>{% endif %}
+                {% if best.ssim == method %} <span class="badge bg-primary">SSIM</span>{% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header fw-semibold">Metrics Comparison (Plotly)</div>
+      <div class="card-body">
+        <div id="dashboardChart"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const pdata = {{ plotly_data | safe }};
+  const methods = pdata.methods;
+
+  const tracePSNR = {x: methods, y: pdata.psnr, name: 'PSNR', type: 'bar', marker: {color: '#1976D2'}};
+  const traceMSE  = {x: methods, y: pdata.mse,  name: 'MSE',  type: 'bar', marker: {color: '#EF5350'}};
+  const traceSSIM = {x: methods, y: pdata.ssim, name: 'SSIM', type: 'bar', marker: {color: '#43A047'}};
+
+  const layout = {
+    barmode: 'group',
+    xaxis: {title: 'Method'},
+    yaxis: {title: 'Value', gridcolor: 'rgba(0,0,0,0.1)'},
+    hovermode: 'closest',
+  };
+
+  Plotly.newPlot('dashboardChart', [tracePSNR, traceMSE, traceSSIM], layout, {responsive: true});
+</script>
+{% endblock %}

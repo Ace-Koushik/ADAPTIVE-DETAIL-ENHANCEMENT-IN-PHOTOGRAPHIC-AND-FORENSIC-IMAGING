@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header fw-semibold">Original</div>
+      <div class="card-body text-center">
+        <img src="{{ url_for('static', filename=data.original.split('static/')[1]) }}" class="img-fluid rounded border" alt="original">
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card shadow-sm h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span class="fw-semibold">Enhanced</span>
+        <span class="badge bg-primary">{{ data.method_used }}</span>
+      </div>
+      <div class="card-body text-center">
+        <img id="enhancedImage" src="{{ url_for('static', filename=data.enhanced.split('static/')[1]) }}" class="img-fluid rounded border" alt="enhanced">
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mt-1">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header fw-semibold">Metrics</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="metric-card bg-psnr">
+              <div class="metric-title"><i class="bi bi-graph-up-arrow"></i> PSNR</div>
+              <div class="metric-value">{{ '%.3f'|format(data.metrics.psnr) }} dB</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="metric-card bg-mse">
+              <div class="metric-title"><i class="bi bi-sliders"></i> MSE</div>
+              <div class="metric-value">{{ '%.6f'|format(data.metrics.mse) }}</div>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="metric-card bg-ssim">
+              <div class="metric-title"><i class="bi bi-eye"></i> SSIM</div>
+              <div class="metric-value">{{ '%.4f'|format(data.metrics.ssim) }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="metricsChart" class="mt-3"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header fw-semibold">Parameters</div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label">Mode</label>
+            <select class="form-select" id="adj_mode">
+              <option value="median" {% if data.mode=='median' %}selected{% endif %}>Median</option>
+              <option value="clahe" {% if data.mode=='clahe' %}selected{% endif %}>CLAHE</option>
+              <option value="bilateral" {% if data.mode=='bilateral' %}selected{% endif %}>CLAHE + Bilateral</option>
+              <option value="unsharp" {% if data.mode=='unsharp' %}selected{% endif %}>CLAHE + Unsharp</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Clip Limit</label>
+            <input type="number" class="form-control" id="adj_clip" value="{{ data.params.clip_limit }}" step="0.1" min="0.5" max="4.0">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Block Size</label>
+            <input type="number" class="form-control" id="adj_block" value="{{ data.params.block_size }}" step="1" min="2" max="32">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label mt-2">Kernel Size</label>
+            <input type="number" class="form-control" id="adj_kernel" value="{{ data.params.kernel_size }}" step="2" min="1" max="25">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label mt-2">Bilateral d</label>
+            <input type="number" class="form-control" id="adj_bilat_d" value="{{ data.params.bilateral_d or 9 }}" step="1" min="1" max="25">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label mt-2">Sigma Color</label>
+            <input type="number" class="form-control" id="adj_sigma_color" value="{{ data.params.sigma_color or 75 }}" step="1" min="1" max="200">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label mt-2">Sigma Space</label>
+            <input type="number" class="form-control" id="adj_sigma_space" value="{{ data.params.sigma_space or 75 }}" step="1" min="1" max="200">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label mt-2">Unsharp Amount</label>
+            <input type="number" class="form-control" id="adj_amount" value="{{ data.params.unsharp_amount or 1.5 }}" step="0.1" min="0.0" max="5.0">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label mt-2">Unsharp Radius</label>
+            <input type="number" class="form-control" id="adj_radius" value="{{ data.params.unsharp_radius or 1.0 }}" step="0.1" min="0.1" max="10.0">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label mt-2">Unsharp Threshold</label>
+            <input type="number" class="form-control" id="adj_threshold" value="{{ data.params.unsharp_threshold or 0 }}" step="1" min="0" max="255">
+          </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-3">
+          <button id="applyAdjust" class="btn btn-secondary">
+            <span id="adjustSpinner" class="spinner-border spinner-border-sm d-none"></span>
+            Apply Adjustments
+          </button>
+          <a class="btn btn-success" href="{{ url_for('generate_report', enhanced_filename=data.enhanced_filename) }}">
+            <i class="bi bi-filetype-pdf"></i> Generate Enhancement Report
+          </a>
+          <a class="btn btn-outline-primary" href="{{ url_for('gallery') }}"><i class="bi bi-images"></i> Gallery</a>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Initialize Plotly bar chart
+  const labels = {{ metrics_labels | safe }};
+  const values = {{ metrics_values | safe }};
+  const colors = ['#1976D2', '#EF5350', '#43A047'];
+
+  const data = [{
+    type: 'bar',
+    x: labels,
+    y: values,
+    marker: {color: colors}
+  }];
+
+  const layout = {
+    title: 'Image Quality Metrics',
+    hovermode: 'closest',
+    yaxis: {zeroline: true, gridcolor: 'rgba(0,0,0,0.1)'}
+  };
+
+  Plotly.newPlot('metricsChart', data, layout, {responsive: true});
+</script>
+{% endblock %}
